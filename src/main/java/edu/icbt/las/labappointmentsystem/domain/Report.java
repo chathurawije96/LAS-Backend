@@ -18,7 +18,7 @@ public class Report extends EntityBase {
     @Lob
     private String report;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     @JoinColumn(name = "report_generated_user_id")
     private User reportGeneratedUser;
 }

@@ -21,7 +21,7 @@ public class Payment extends EntityBase{
     @NotBlank
     private BigDecimal totalPay;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     @JoinColumn(name = "appointment_id")
     private Appointment appointment;
 }
