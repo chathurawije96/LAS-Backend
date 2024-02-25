@@ -15,11 +15,11 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Payment extends EntityBase{
-    @NotBlank
+    @NonNull
     private BigDecimal amount;
-    @NotBlank
+    @NonNull
     private BigDecimal serviceCharge;
-    @NotBlank
+    @NonNull
     private BigDecimal totalPay;
 
     @OneToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)

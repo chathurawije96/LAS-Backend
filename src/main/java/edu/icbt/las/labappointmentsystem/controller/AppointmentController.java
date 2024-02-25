@@ -42,7 +42,7 @@ public class AppointmentController {
 
     @PostMapping("/")
     @PreAuthorize("hasAuthority('PATIENT')")
-    public ResponseEntity makeAppointments(@RequestBody MakeAppointmentRequest makeAppointmentRequest) {
+    public @ResponseBody ResponseEntity makeAppointments(@RequestBody MakeAppointmentRequest makeAppointmentRequest) {
         try {
             return ResponseEntity.ok(appointmentService.makeAppointment(makeAppointmentRequest,getLoggedUser()));
         } catch (ServiceException e) {

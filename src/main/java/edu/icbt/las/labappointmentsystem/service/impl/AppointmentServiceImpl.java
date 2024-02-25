@@ -9,19 +9,21 @@ import edu.icbt.las.labappointmentsystem.exception.ServiceExceptionType;
 import edu.icbt.las.labappointmentsystem.repository.AppointmentRepository;
 import edu.icbt.las.labappointmentsystem.service.*;
 import jakarta.annotation.PostConstruct;
+import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 @Service
 @Slf4j
@@ -39,6 +41,9 @@ public class AppointmentServiceImpl extends GenericServiceImpl<Appointment,Long>
     @Autowired
     private PaymentService paymentService;
 
+    private final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
+
     @PostConstruct
     void init(){
         init(appointmentRepository);
@@ -54,10 +59,17 @@ public class AppointmentServiceImpl extends GenericServiceImpl<Appointment,Long>
     }
 
     @Override
-    public Appointment makeAppointment(MakeAppointmentRequest makeAppointmentRequest, String loggedUser) throws ServiceException {
-        int dayAppointmentCount = appointmentValidations(makeAppointmentRequest, loggedUser);
+    @Transactional(rollbackFor=ServiceException.class)
+    public @NotBlank String makeAppointment(MakeAppointmentRequest makeAppointmentRequest, String loggedUser) throws ServiceException {
 
-        Appointment appointment = Appointment.builder().appointmentDate(makeAppointmentRequest.getAppointmentDate())
+        Date appointmentDate = null;
+        try {
+            appointmentDate = DATE_FORMAT.parse(makeAppointmentRequest.getAppointmentDate());
+        } catch (ParseException e) {
+            throw new ServiceException(ServiceExceptionType.VALIDATION_FAILED,"Invalid Date Format..");
+        }
+        int dayAppointmentCount = appointmentValidations(makeAppointmentRequest, loggedUser, appointmentDate);
+        Appointment appointment = Appointment.builder().appointmentDate(appointmentDate)
                 .appointmentNumber(String.format("AP-%05d", dayAppointmentCount + 1))
                 .user(userService.findUserByEmail(loggedUser))
                 .recommendedDoctor(makeAppointmentRequest.getRecommendedDoctor())
@@ -81,6 +93,7 @@ public class AppointmentServiceImpl extends GenericServiceImpl<Appointment,Long>
         }
         totalPrice = totalPrice.setScale(2, RoundingMode.HALF_EVEN);
         BigDecimal serviceChargetotalPrice = new BigDecimal(10).multiply(totalPrice).scaleByPowerOfTen(-2);
+        serviceChargetotalPrice = serviceChargetotalPrice.setScale(2, RoundingMode.HALF_EVEN);
         Payment payment = Payment.builder().appointment(appointment)
                 .serviceCharge(serviceChargetotalPrice)
                 .amount(totalPrice)
@@ -91,33 +104,29 @@ public class AppointmentServiceImpl extends GenericServiceImpl<Appointment,Long>
                 .totalPay(totalPrice.add(serviceChargetotalPrice))
                 .build();
         paymentService.save(payment);
-        return appointment;
+        return appointment.getAppointmentNumber();
     }
 
     private Date getAppointmentTime(int dayAppointmentCount) {
-
-        Locale locale = new Locale("en", "UK");
-        DateFormat dateFormat = DateFormat.getTimeInstance(DateFormat.DEFAULT, locale);
-
         try {
-            LocalTime time = LocalTime.parse("08:30:00");
+            LocalTime time = LocalTime.parse("08:30:00", DateTimeFormatter.ofPattern("HH:mm:ss"));
             if (dayAppointmentCount>0){
                 time = time.plusMinutes(10L *dayAppointmentCount);
             }
-            return dateFormat.parse(time.toString());
+            return TIME_FORMAT.parse(time.format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         } catch (ParseException e) {
             log.error("Invalid Time format..");
             throw new RuntimeException(e);
         }
     }
 
-    private int appointmentValidations(MakeAppointmentRequest makeAppointmentRequest, String loggedUser) throws ServiceException{
+    private int appointmentValidations(MakeAppointmentRequest makeAppointmentRequest, String loggedUser, Date appointmentDate) throws ServiceException{
         try {
-            List<Appointment> dayAppointment = appointmentRepository.findAllByAppointmentDateAndStatus(makeAppointmentRequest.getAppointmentDate(), EntityBase.Status.ACTIVE);
+            List<Appointment> dayAppointment = appointmentRepository.findAllByAppointmentDateAndStatus(appointmentDate, EntityBase.Status.ACTIVE);
             if (dayAppointment.size() == dailyAppointmentCount){
                 throw new ServiceException(ServiceExceptionType.VALIDATION_FAILED,"Daily appointment count exceeded..");
             }
-            List<Appointment> dayUserAppointment = appointmentRepository.findAllByAppointmentDateAndUser_usernameAndStatus(makeAppointmentRequest.getAppointmentDate(),
+            List<Appointment> dayUserAppointment = appointmentRepository.findAllByAppointmentDateAndUser_usernameAndStatus(appointmentDate,
                     loggedUser,EntityBase.Status.ACTIVE);
             if (!dayUserAppointment.isEmpty()){
                 throw new ServiceException(ServiceExceptionType.VALIDATION_FAILED,"This patient has an active appointment on the selected date");
