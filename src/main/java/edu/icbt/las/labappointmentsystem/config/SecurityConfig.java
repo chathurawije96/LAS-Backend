@@ -39,16 +39,24 @@ public class SecurityConfig {
     // Configuring HttpSecurity
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.csrf().disable()
+        http.csrf()
+                .disable()
                 .authorizeHttpRequests()
-                .requestMatchers("/api/auth", "/api/register", "/api/register/**").permitAll()
+                .requestMatchers(
+                        "/api/auth", "/api/register", "/api/register/**"
+
+                )
+                .permitAll()
+                .anyRequest()
+                .authenticated()
                 .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
     }
     @Bean
     public WebMvcConfigurer corsConfigurer() {
