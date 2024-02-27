@@ -3,6 +3,7 @@ package edu.icbt.las.labappointmentsystem.controller;
 import edu.icbt.las.labappointmentsystem.domain.Appointment;
 import edu.icbt.las.labappointmentsystem.domain.Payment;
 import edu.icbt.las.labappointmentsystem.dto.AllAppointmentResponse;
+import edu.icbt.las.labappointmentsystem.dto.AppointmentTestResponse;
 import edu.icbt.las.labappointmentsystem.dto.MakeAppointmentRequest;
 import edu.icbt.las.labappointmentsystem.dto.common.ErrorResponse;
 import edu.icbt.las.labappointmentsystem.exception.ServiceException;
@@ -20,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/appointments")
@@ -38,6 +41,30 @@ public class AppointmentController {
             ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
+    }
+
+    @GetMapping("/tests/{id}")
+    @PreAuthorize("hasAuthority('PATIENT')")
+    public ResponseEntity getAllAppointmentTests(@PathVariable("id") long appointmentId) {
+        try {
+            return ResponseEntity.ok(mapAppointmentTestsResponse(appointmentService.findById(appointmentId)));
+        } catch (ServiceException e) {
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
+
+    private List<AppointmentTestResponse> mapAppointmentTestsResponse(Optional<Appointment> byId) {
+        List<AppointmentTestResponse> responses = new ArrayList<>();
+        byId.ifPresent(appointment -> appointment.getAppointmentTests().forEach(appointmentTests -> {
+            responses.add(AppointmentTestResponse.builder()
+                    .testId(appointmentTests.getId())
+                    .testName(appointmentTests.getTest().getName())
+                    .testShortName(appointmentTests.getTest().getShortName())
+                    .status(appointmentTests.getStatus().name())
+                    .build());
+        }));
+        return responses;
     }
 
     @PostMapping("/")
