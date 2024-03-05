@@ -66,7 +66,7 @@ public class AuthController {
     public ResponseEntity registerVerify(@RequestBody RegistrationVerifyRequest request) {
         try {
             userService.registerVerify(request);
-            return ResponseEntity.ok("Email Verification Success.. ");
+            return ResponseEntity.ok(RegistrationVerifyResponse.builder().message("Email Verification Success").build());
         } catch (ServiceException e) {
             ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);

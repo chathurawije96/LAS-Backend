@@ -3,6 +3,7 @@ package edu.icbt.las.labappointmentsystem.service.impl;
 import edu.icbt.las.labappointmentsystem.domain.*;
 import edu.icbt.las.labappointmentsystem.dto.AppointmentTestRequest;
 import edu.icbt.las.labappointmentsystem.dto.MakeAppointmentRequest;
+import edu.icbt.las.labappointmentsystem.dto.MakeAppointmentResponse;
 import edu.icbt.las.labappointmentsystem.exception.DataAccessException;
 import edu.icbt.las.labappointmentsystem.exception.ServiceException;
 import edu.icbt.las.labappointmentsystem.exception.ServiceExceptionType;
@@ -60,7 +61,7 @@ public class AppointmentServiceImpl extends GenericServiceImpl<Appointment,Long>
 
     @Override
     @Transactional(rollbackFor=ServiceException.class)
-    public @NotBlank String makeAppointment(MakeAppointmentRequest makeAppointmentRequest, String loggedUser) throws ServiceException {
+    public @NotBlank MakeAppointmentResponse makeAppointment(MakeAppointmentRequest makeAppointmentRequest, String loggedUser) throws ServiceException {
 
         Date appointmentDate = null;
         try {
@@ -103,8 +104,14 @@ public class AppointmentServiceImpl extends GenericServiceImpl<Appointment,Long>
                 .updatedAt(new Date())
                 .totalPay(totalPrice.add(serviceChargetotalPrice))
                 .build();
-        paymentService.save(payment);
-        return appointment.getAppointmentNumber();
+        Payment save = paymentService.save(payment);
+        return MakeAppointmentResponse.builder()
+                .serviceCharge(serviceChargetotalPrice)
+                .appointmentId(appointment.getId())
+                .totalPay(save.getTotalPay())
+                .appointmentNumber(appointment.getAppointmentNumber())
+                .amount(totalPrice)
+                .build();
     }
 
     private Date getAppointmentTime(int dayAppointmentCount) {
