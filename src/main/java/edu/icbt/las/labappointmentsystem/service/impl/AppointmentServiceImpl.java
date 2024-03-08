@@ -87,7 +87,7 @@ public class AppointmentServiceImpl extends GenericServiceImpl<Appointment,Long>
             appointmentTestsService.save(AppointmentTests.builder()
                     .appointment(appointment)
                     .createdAt(new Date())
-                    .status(EntityBase.Status.PENDING)
+                    .status(EntityBase.Status.ACTIVE)
                     .updatedAt(new Date())
                     .test(test)
                     .build());

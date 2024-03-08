@@ -7,4 +7,6 @@ import edu.icbt.las.labappointmentsystem.exception.ServiceException;
 public interface PaymentService extends GenericService<Payment,Long> {
 
     Payment findByAppointmentId(Long id) throws ServiceException;
+
+    void savePaymentSuccess(Long id) throws ServiceException;
 }

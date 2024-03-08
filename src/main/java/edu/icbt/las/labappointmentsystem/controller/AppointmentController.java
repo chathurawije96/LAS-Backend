@@ -77,6 +77,17 @@ public class AppointmentController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
+    @PutMapping("/payment/{id}")
+    @PreAuthorize("hasAuthority('PATIENT')")
+    public ResponseEntity makePayment(@PathVariable("id") long appointmentId) {
+        try {
+            paymentService.savePaymentSuccess(appointmentId);
+            return ResponseEntity.status(HttpStatus.OK).build();
+        } catch (ServiceException e) {
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
 
     private List<AllAppointmentResponse> mapAppointmentResponse(List<Appointment> appointments) {
         List<AllAppointmentResponse> list = new ArrayList<>();
