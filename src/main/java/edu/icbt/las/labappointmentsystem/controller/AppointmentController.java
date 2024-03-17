@@ -112,7 +112,7 @@ public class AppointmentController {
 
     @PostMapping("/report/{id}")
     @PreAuthorize("hasAuthority('LAB_OPERATOR')")
-    public ResponseEntity uploadReport(@PathVariable("id") long appointmentTestId, UploadReportRequest request) {
+    public @ResponseBody ResponseEntity uploadReport(@PathVariable("id") long appointmentTestId, @RequestBody UploadReportRequest request) {
         try {
             reportService.uploadReport(appointmentTestId, request);
             return ResponseEntity.status(HttpStatus.OK).build();
