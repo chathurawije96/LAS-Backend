@@ -37,7 +37,6 @@ public class EmailVerification extends EntityBase {
   private Date triedOn;
 
   @Builder
-
   public EmailVerification(Long id, Status status, Date createdAt, Date updatedAt, String source, String verificationCode, byte tries, Date codeSentOn, Date codeExpiresOn, Date verifiedOn, Date triedOn) {
     super(id, status, createdAt, updatedAt);
     this.source = source;

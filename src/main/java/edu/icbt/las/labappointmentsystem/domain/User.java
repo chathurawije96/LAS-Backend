@@ -22,10 +22,10 @@ public class User extends EntityBase {
   }
 
   public enum UserType {
-    ADMIN, LAB_OPERATOR, CUSTOMER
+    ADMIN, LAB_OPERATOR, PATIENT
   }
 
-  enum IdType {
+  public enum IdType {
     NIC, DRIVING_LICENSE, PASSPORT
   }
 
@@ -49,7 +49,7 @@ public class User extends EntityBase {
 
   private String identityNo;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
   @JoinColumn(name = "email_verification_id")
   private EmailVerification emailVerification;
 

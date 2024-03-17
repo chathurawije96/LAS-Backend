@@ -22,7 +22,7 @@ public class Test extends EntityBase{
     @NotBlank
     private BigDecimal price;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     @JoinColumn(name = "lab_id", nullable = false)
     private Lab lab;
 }
